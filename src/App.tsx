@@ -3,19 +3,32 @@ import { useEffect, useState } from 'react';
 export default function App() {
   const [gamepads, setGamepads] = useState<Gamepad[]>([]);
   const [activeButtons, setActiveButtons] = useState<boolean[]>([]);
+  const [pollingRate, setPollingRate] = useState<number>(0);
 
   useEffect(() => {
     const pollGamepads = () => {
-      const gps = navigator.getGamepads ? navigator.getGamepads() : [];
-      const activeGps = Array.from(gps).filter((gp): gp is Gamepad => gp !== null);
-      
-      if (activeGps.length > 0) {
-        setGamepads(activeGps);
-        setActiveButtons(activeGps[0].buttons.map(b => b.pressed));
-      }
-      requestAnimationFrame(pollGamepads);
-    };
+  const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+  const activeGps = Array.from(gps).filter((gp): gp is Gamepad => gp !== null);
+  
+  if (activeGps.length > 0) {
+    const gp = activeGps[0];
+    setGamepads(activeGps);
+    setActiveButtons(gp.buttons.map(b => b.pressed));
 
+    // Cálculo del Polling Rate usando el timestamp del gamepad
+    if (gp.timestamp && gp.timestamp !== lastTimestamp) {
+      const delta = gp.timestamp - lastTimestamp;
+      if (delta > 0) {
+        const hz = Math.round(1000 / delta);
+        setPollingRate(hz);
+      }
+      lastTimestamp = gp.timestamp;
+    }
+  }
+  requestAnimationFrame(pollGamepads);
+};
+    let lastTimestamp = 0;
+    // let lastHzUpdate = 0;
     const animId = requestAnimationFrame(pollGamepads);
     return () => cancelAnimationFrame(animId);
   }, []);
@@ -28,9 +41,16 @@ export default function App() {
     5: 'RB',
     6: 'LT',
     7: 'RT',
+    8: 'Select',
+    9: 'Start',
+    10: 'L3',
+    11: 'R3',
+    16: 'Home',
   };
+ // const pollingRate = timestamp => {
+    
 
- const actionButtonOrder = [2, 3, 5, 4, 0, 1, 7, 6]; // Ajusta los índices exactos de tus 8 botones
+ const actionButtonOrder = [2, 3, 5, 4, 0, 1, 7, 6,8,9,10,11,16]; // Ajusta los índices exactos de tus 8 botones
 
   // Función auxiliar para saber el estado de un botón específico de forma segura
   const isPressed = (index: number) => activeButtons[index] || false;
@@ -59,6 +79,7 @@ export default function App() {
             <div className="mb-6 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-sm">
               <span className="text-slate-400">Dispositivo Activo:</span>
               <span className="font-mono font-bold text-emerald-400">{gamepads[0].id}</span>
+              <span className="font-mono font-bold text-cyan-400">{pollingRate} Hz</span>
             </div>
 
             {/* Módulo de Visualización Estilo Leverless */}
