@@ -1,3 +1,9 @@
+export interface InputEntry {
+  id: string;
+  label: string;
+  time: string;
+}
+
 export const buttonMap: Record<number, string> = {
   0: 'A', 1: 'B', 2: 'X', 3: 'Y',
   4: 'LB', 5: 'RB', 6: 'LT', 7: 'RT',
